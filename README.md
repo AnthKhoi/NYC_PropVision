@@ -14,7 +14,7 @@ Dự án **NYC PropVision** xây dựng một hệ thống khép kín gồm **Da
 2. **Khám phá dữ liệu chuyên sâu (EDA):** Phân tích phân phối, tương quan đa biến và ngoại lai.
 3. **Bảng điều khiển tương tác (Interactive BI Dashboard):** 6 phân hệ nghiệp vụ với 13 biểu đồ tương tác cao cấp (bản đồ địa lý tọa độ, drill-down phân tầng, treemap, heatmap mật độ...).
 4. **Mô hình Trí tuệ Nhân tạo & Dự báo (AI Valuation & Forecasting):**
-   - **Random Forest Regressor:** Định giá cá thể tài sản dựa trên vị trí quận, diện tích, tuổi thọ và thu nhập khu vực.
+   - **Multiple Linear Regression (Hồi quy tuyến tính đa biến):** Định giá cá thể tài sản dựa trên phương trình hồi quy toán học giữa diện tích, tuổi thọ, thu nhập khu vực và vị trí quận.
    - **Hồi quy chuỗi thời gian OLS:** Dự báo xu hướng giá và số lượng giao dịch tương lai kèm **Khoảng tin cậy 95% (95% Confidence Interval)** và kiểm định ý nghĩa thống kê ($p$-value, $R^2$).
 
 ---
@@ -31,7 +31,7 @@ flowchart TD
     E --> F["Local Quantile Outlier Filtering"]
     
     F --> G["Exploratory Data Analysis (EDA)"]
-    F --> H["Machine Learning Modeling (Random Forest)"]
+    F --> H["Machine Learning Modeling (Linear Regression)"]
     F --> I["Time-Series Trend Forecasting (OLS + 95% CI)"]
     
     H --> J["Interactive Streamlit Dashboard (13 Charts)"]
@@ -51,24 +51,28 @@ Hệ thống dashboard tương tác phân chia thành 6 Tab chức năng:
 | **Tab 2** | Phân Bố Không Gian & Vị Trí | 4. Bản đồ Địa lý tương tác (Scatter Map) tọa độ giao dịch.<br>5. Mật độ nhiệt 2 chiều (Density Heatmap) Tuổi thọ vs Đơn giá. |
 | **Tab 3** | Cấu Trúc Đô Thị & Drill-Down | 6. Biểu đồ Treemap phân cấp TP -> Quận -> Khu phố.<br>7. Biểu đồ Cột ngang (Horizontal Bar) Top 10 khu phố đắt nhất.<br>+ Thanh tra chi tiết từng quận (District Inspector). |
 | **Tab 4** | Đặc Điểm Công Trình & Quy Mô | 8. Biểu đồ Cột đứng giá theo phân nhóm diện tích.<br>9. Biểu đồ Hộp (Box Plot) phân phối log giá 5 quận.<br>10. Biểu đồ Tần suất (Histogram) đơn giá/sqft. |
-| **Tab 5** | Học Máy Định Giá Bất Động Sản | 11. Biểu đồ Hồi quy OLS (Diện tích vs Giá).<br>12. Đối chiếu Giá thực tế vs AI Dự báo (Đường chuẩn $y=x$).<br>+ Công cụ mô phỏng định giá & dự phóng tăng trưởng. |
+| **Tab 5** | Học Máy Định Giá Bất Động Sản | 11. Biểu đồ Hồi quy OLS (Diện tích vs Giá).<br>12. Đối chiếu Giá thực tế vs Hồi quy Tuyến tính Dự báo (Đường chuẩn $y=x$).<br>+ Công cụ mô phỏng định giá & dự phóng tăng trưởng. |
 | **Tab 6** | Dự Báo Xu Hướng Thị Trường | 13. Dự báo xu hướng chuỗi thời gian kèm Khoảng tin cậy 95% ($t$-distribution), đo kiểm $p$-value và $R^2$. |
 
 ---
 
-## 🧠 4. Hiệu Quả Mô Hình Học Máy (AI Model Metrics)
+## 🧠 4. Hiệu Quả Mô Hình Hồi Quy Tuyến Tính (Linear Regression Metrics)
 
 Mô hình được huấn luyện và đánh giá khách quan trên tập kiểm thử độc lập (Test set 20%):
 
-- **Thuật toán tối ưu:** `Random Forest Regressor` (`n_estimators=200, min_samples_leaf=3`)
-- **Hệ số xác định ($R^2$ Score):** `0.521` (giải thích được 52.1% phương sai biến động giá)
-- **Sai số tuyệt đối trung bình (MAE):** `$310,733 USD`
-- **Sai lệch phần trăm trung vị (MedAPE):** `27.6%`
-- **Đặc trưng đóng góp hàng đầu (Feature Importance):**
-  1. Diện tích sử dụng (`GROSS SQUARE FEET`): ~46.5%
-  2. Vị trí Quận Manhattan (`Quan_Manhattan`): ~23.8%
-  3. Thu nhập hộ gia đình trung vị (`MEDIAN_HOUSEHOLD_INCOME`): ~12.4%
-  4. Tuổi thọ công trình (`TUOI_THO_NHA`): ~8.9%
+- **Thuật toán cốt lõi:** `Multiple Linear Regression` (Hồi quy tuyến tính đa biến)
+- **Phương trình toán học:** $\ln(\text{Giá}) = \beta_0 + \sum \beta_i \cdot X_i$
+- **Hệ số chặn (Intercept $\beta_0$):** `13.4263`
+- **Hệ số xác định ($R^2$ Score):** `0.243` trên log giá
+- **Sai số tuyệt đối trung bình (MAE):** `$456,646 USD`
+- **Sai lệch phần trăm trung vị (MedAPE):** `33.3%`
+- **Hệ số tác động hồi quy ($\beta_i$):**
+  1. Vị trí Quận Manhattan (`Quan_Manhattan`): `+1.7057` (Tác động tăng giá mạnh nhất)
+  2. Thu nhập hộ gia đình (`MEDIAN_HOUSEHOLD_INCOME`): `+0.000004` (Tác động tăng giá)
+  3. Vị trí Quận Brooklyn (`Quan_Brooklyn`): `-0.0373`
+  4. Vị trí Quận Queens (`Quan_Queens`): `-0.4186`
+  5. Vị trí Quận Bronx (`Quan_Bronx`): `-0.5417`
+  6. Vị trí Quận Staten Island (`Quan_Staten Island`): `-0.7080`
 
 ---
 

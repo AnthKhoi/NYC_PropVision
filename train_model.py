@@ -47,40 +47,52 @@ y = np.log1p(df_clean[col_gia])
 # Phan chia tap train/test va danh gia mo hinh
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-def danh_gia(m):
-    p = m.predict(X_test)
-    gia_that, gia_db = np.expm1(y_test), np.expm1(p)
-    return {
-        'R2_log': r2_score(y_test, p),
-        'MAE_usd': mean_absolute_error(gia_that, gia_db),
-        'MedAPE_%': float(np.median(np.abs(gia_that - gia_db) / gia_that) * 100)
-    }
+# Huan luyen mo hinh Hoi quy tuyen tinh da bien (Multiple Linear Regression)
+print("Huan luyen mo hinh Hoi quy tuyen tinh da bien (Multiple Linear Regression)...")
+model = LinearRegression()
+model.fit(X_train, y_train)
 
-ung_vien = {
-    'Linear Regression': LinearRegression(),
-    'Random Forest': RandomForestRegressor(n_estimators=200, min_samples_leaf=3, random_state=42, n_jobs=-1),
+# Danh gia tren tap test doc lap (20%)
+p_test = model.predict(X_test)
+gia_that, gia_db = np.expm1(y_test), np.expm1(p_test)
+r2_val = r2_score(y_test, p_test)
+mae_val = mean_absolute_error(gia_that, gia_db)
+medape_val = float(np.median(np.abs(gia_that - gia_db) / gia_that) * 100)
+
+metrics = {
+    'R2_log': r2_val,
+    'MAE_usd': mae_val,
+    'MedAPE_%': medape_val
 }
 
-ket_qua = {}
-for ten, m in ung_vien.items():
-    print(f"Huan luyen {ten}...")
-    m.fit(X_train, y_train)
-    ket_qua[ten] = danh_gia(m)
-    r = ket_qua[ten]
-    print(f"  R2 = {r['R2_log']:.3f} | MAE = ${r['MAE_usd']:,.0f} | MedAPE = {r['MedAPE_%']:.1f}%")
+print(f"  R2 Score (log gia) = {r2_val:.3f}")
+print(f"  MAE (Sai so TB)    = ${mae_val:,.0f}")
+print(f"  MedAPE (Sai lech)  = {medape_val:.1f}%")
 
-ten_tot = max(ket_qua, key=lambda k: ket_qua[k]['R2_log'])
-print(f"Mo hinh tot nhat: {ten_tot}")
+# Huan luyen tren toan bo du lieu sach de phuc vu he thong
+model.fit(X, y)
+intercept_val = float(model.intercept_)
+coef_dict = {col: float(coef) for col, coef in zip(X.columns, model.coef_)}
 
-best = ung_vien[ten_tot]
-best.fit(X, y)
+print(f"\nHe so chan (Intercept beta_0): {intercept_val:.4f}")
+print("Bang he so hoi quy (Coefficients beta_i):")
+for feat, coef in coef_dict.items():
+    chieu = "Tang gia (+)" if coef > 0 else "Giam gia (-)"
+    print(f"  {feat:30s}: {coef:+.6f} ({chieu})")
 
-joblib.dump({
-    'model': best,
-    'features': X.columns,
-    'model_name': ten_tot,
-    'metrics': ket_qua[ten_tot],
-    'all_metrics': ket_qua,
+# Luu mo hinh va metadata
+model_payload = {
+    'model': model,
+    'features': X.columns.tolist(),
+    'model_name': 'Linear Regression',
+    'algorithm': 'Multiple Linear Regression (Hoi quy tuyen tinh da bien)',
+    'metrics': metrics,
+    'intercept': intercept_val,
+    'coefficients': coef_dict,
     'income_by_borough': thu_nhap_quan.to_dict(),
-}, 'nyc_rf_model.pkl')
-print("Da luu mo hinh tai: nyc_rf_model.pkl")
+}
+
+joblib.dump(model_payload, 'nyc_rf_model.pkl')
+joblib.dump(model_payload, 'nyc_linear_model.pkl')
+print("\nDa luu mo hinh thanh cong tai nyc_rf_model.pkl va nyc_linear_model.pkl!")
+

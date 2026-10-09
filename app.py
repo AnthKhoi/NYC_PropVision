@@ -7,7 +7,7 @@ import joblib
 from scipy import stats
 
 st.set_page_config(
-    page_title="Dự Đoán & Trực Quan Hóa Giá Bất Động Sản New York",
+    page_title="Hệ Thống Phân Tích Và Dự Báo Giá Bất Động Sản New York",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -15,18 +15,18 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main-header {
-        font-size: 2.1rem;
+        font-size: 2.0rem;
         font-weight: 800;
         color: #1E3A8A;
         text-align: center;
-        margin-bottom: 0.2rem;
-        letter-spacing: -0.5px;
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.3px;
         text-transform: uppercase;
     }
     .sub-header {
         text-align: center;
         color: #4B5563;
-        font-size: 1.05rem;
+        font-size: 1.0rem;
         margin-bottom: 1.5rem;
         font-weight: 500;
     }
@@ -45,7 +45,7 @@ st.markdown("""
         margin-bottom: 1rem;
         color: #1E3A8A;
         font-size: 0.95rem;
-        line-height: 1.5;
+        line-height: 1.55;
     }
     .stTabs [data-baseweb="tab-list"] {
         gap: 6px;
@@ -123,18 +123,18 @@ df_data = load_and_prepare_data()
 
 # Bo loc du lieu sidebar
 st.sidebar.markdown("## BỘ LỌC DỮ LIỆU")
-st.sidebar.caption("Tùy chỉnh thông số theo đặc điểm và vị trí bất động sản.")
+st.sidebar.caption("Tùy biến tham số khảo sát theo phân vùng địa lý và đặc điểm công trình.")
 
 ds_quan_all = sorted(df_data['QUAN'].dropna().unique().tolist())
 ds_quan = st.sidebar.multiselect(
-    "1. Vị trí Quận (Borough):",
+    "1. Vị trí Quận hành chính:",
     options=ds_quan_all,
     default=ds_quan_all
 )
 
 ds_pk_all = df_data['PHAN_KHUC_GIA'].dropna().unique().tolist()
 ds_phan_khuc = st.sidebar.multiselect(
-    "2. Phân khúc giá:",
+    "2. Phân khúc giá trị:",
     options=ds_pk_all,
     default=ds_pk_all
 )
@@ -142,7 +142,7 @@ ds_phan_khuc = st.sidebar.multiselect(
 min_dt = int(df_data['DIEN_TICH_SU_DUNG'].min())
 max_dt = int(df_data['DIEN_TICH_SU_DUNG'].quantile(0.99))
 loc_dien_tich = st.sidebar.slider(
-    "3. Diện tích sử dụng (Sqft):",
+    "3. Giới hạn diện tích sàn theo Sqft:",
     min_value=0,
     max_value=15000,
     value=(0, 6000),
@@ -152,7 +152,7 @@ loc_dien_tich = st.sidebar.slider(
 min_age = int(df_data['TUOI_THO_NHA'].min())
 max_age = int(df_data['TUOI_THO_NHA'].max())
 loc_tuoi_nha = st.sidebar.slider(
-    "4. Tuổi thọ công trình (Năm):",
+    "4. Giới hạn tuổi thọ công trình theo năm:",
     min_value=min_age,
     max_value=150,
     value=(min_age, 130),
@@ -170,15 +170,15 @@ df_loc = df_data[
 
 st.sidebar.markdown("---")
 ty_le = (len(df_loc) / len(df_data)) * 100 if len(df_data) > 0 else 0
-st.sidebar.info(f"Tập dữ liệu sau lọc: **{len(df_loc):,}** / **{len(df_data):,}** giao dịch ({ty_le:.1f}%)")
+st.sidebar.info(f"Quy mô tập mẫu hiện hành: **{len(df_loc):,}** trên tổng số **{len(df_data):,}** giao dịch, chiếm tỷ trọng {ty_le:.1f}%.")
 
 if len(df_loc) == 0:
-    st.warning("Không có dữ liệu phù hợp với điều kiện lọc. Vui lòng mở rộng khoảng lọc ở thanh bên.")
+    st.warning("Không tìm thấy bản ghi phù hợp với điều kiện truy vấn. Vui lòng nới rộng phạm vi bộ lọc tại thanh điều hướng.")
     st.stop()
 
 # Header va KPI tong quan
-st.markdown("<div class='main-header'>DỰ ĐOÁN VÀ TRỰC QUAN HÓA XU HƯỚNG GIÁ BẤT ĐỘNG SẢN TẠI NEW YORK</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-header'>Nghiên Cứu Và Phân Tích Đa Chiều Giá Trị Bất Động Sản Theo Đặc Điểm Công Trình Và Vị Trí Địa Lý</div>", unsafe_allow_html=True)
+st.markdown("<div class='main-header'>HỆ THỐNG TRỰC QUAN HÓA VÀ DỰ BÁO GIÁ BẤT ĐỘNG SẢN NEW YORK</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-header'>Phân Tích Đa Chiều Cấu Trúc Thị Trường Địa Ốc Theo Đặc Tính Kỹ Thuật Công Trình Và Vị Trí Không Gian</div>", unsafe_allow_html=True)
 
 kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 tong_doanh_so = df_loc['GIA_BAN'].sum() / 1e9
@@ -188,40 +188,41 @@ tuoi_nha_tb = df_loc['TUOI_THO_NHA'].mean()
 so_giao_dich = len(df_loc)
 
 kpi1.metric("Tổng Doanh Số Tích Lũy", f"${tong_doanh_so:.2f} Tỷ USD")
-kpi2.metric("Số Lượng Giao Dịch", f"{so_giao_dich:,} căn")
-kpi3.metric("Mức Giá Trung Vị", f"${gia_trung_vi:,.0f}")
-kpi4.metric("Đơn Giá Trung Vị / Sqft", f"${don_gia_sqft:,.0f}")
+kpi2.metric("Số Lượng Giao Dịch", f"{so_giao_dich:,} giao dịch")
+kpi3.metric("Mức Giá Trung Vị", f"${gia_trung_vi:,.0f} USD")
+kpi4.metric("Đơn Giá Trung Vị Trên Mỗi Sqft", f"${don_gia_sqft:,.0f} USD")
 kpi5.metric("Tuổi Thọ Trung Bình", f"{tuoi_nha_tb:.0f} năm")
 
 st.markdown("---")
 
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "1. XU HƯỚNG THỊ TRƯỜNG & THỊ PHẦN",
-    "2. PHÂN BỐ KHÔNG GIAN & VỊ TRÍ",
-    "3. CẤU TRÚC ĐÔ THỊ & DRILL-DOWN",
-    "4. ĐẶC ĐIỂM CÔNG TRÌNH & QUY MÔ",
-    "5. HỌC MÁY ĐỊNH GIÁ BẤT ĐỘNG SẢN",
-    "6. DỰ BÁO XU HƯỚNG THỊ TRƯỜNG"
+    "1. XU HƯỚNG THỊ TRƯỜNG VÀ THỊ PHẦN",
+    "2. PHÂN BỐ KHÔNG GIAN VÀ ĐỊA LÝ",
+    "3. CẤU TRÚC ĐÔ THỊ VÀ PHÂN CẤP KHU VỰC",
+    "4. ĐẶC TÍNH CÔNG TRÌNH VÀ QUY MÔ",
+    "5. MÔ HÌNH HỒI QUY ĐỊNH GIÁ BẤT ĐỘNG SẢN",
+    "6. DỰ BÁO XU HƯỚNG THỊ TRƯỜNG CHUỖI THỜI GIAN"
 ])
+
 
 # Tab 1: Xu huong thoi gian va thi phan
 with tab1:
-    st.markdown("<div class='insight-card'><b>Nhận định thị trường:</b> Doanh số giao dịch có tính chu kỳ và mùa vụ rõ nét. Phân khúc bất động sản tại Manhattan và Brooklyn dẫn đầu về quy mô dòng tiền và chiếm thị phần áp đảo toàn thành phố.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='insight-card'><b>Nhận định chu kỳ thị trường:</b> Doanh số giao dịch có tính chu kỳ và biến động rõ rệt theo thời gian. Khu vực Manhattan và Brooklyn dẫn đầu về quy mô dòng tiền và chiếm tỷ trọng chi phối toàn thị trường thành phố.</div>", unsafe_allow_html=True)
     c1, c2 = st.columns([6, 4])
     
     with c1:
-        st.markdown("#### 1. Biểu đồ Miền (Area Chart): Xu Hướng Doanh Số Giao Dịch Theo Tháng")
+        st.markdown("#### 1. Biểu đồ Miền: Xu Hướng Doanh Số Giao Dịch Theo Tháng")
         df_trend = df_loc.groupby('THANG_NAM_BAN')['GIA_BAN'].sum().reset_index()
         fig_area = px.area(
             df_trend, x='THANG_NAM_BAN', y='GIA_BAN',
             markers=True, color_discrete_sequence=['#2563EB'], template=theme,
-            labels={'THANG_NAM_BAN': 'Thời gian (Năm-Tháng)', 'GIA_BAN': 'Tổng doanh số (USD)'}
+            labels={'THANG_NAM_BAN': 'Thời gian theo năm và tháng', 'GIA_BAN': 'Tổng doanh số USD'}
         )
         fig_area.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=380)
         st.plotly_chart(fig_area, use_container_width=True)
         
     with c2:
-        st.markdown("#### 2. Biểu đồ Vành Khuyên (Donut Chart): Thị Phần Doanh Số Theo Quận")
+        st.markdown("#### 2. Biểu đồ Vành Khuyên: Cơ Cấu Doanh Số Theo Quận")
         fig_donut = px.pie(
             df_loc, names='QUAN', values='GIA_BAN', hole=0.55,
             color_discrete_sequence=px.colors.qualitative.Bold, template=theme
@@ -230,23 +231,23 @@ with tab1:
         fig_donut.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=380, showlegend=False)
         st.plotly_chart(fig_donut, use_container_width=True)
 
-    st.markdown("#### 3. Biểu đồ Đường (Line Chart): Diễn Biến Đơn Giá Trung Vị / Sqft Theo Từng Tháng")
+    st.markdown("#### 3. Biểu đồ Đường: Diễn Biến Đơn Giá Trung Vị Trên Mỗi Sqft Theo Tháng")
     df_line = df_loc.groupby(['THANG_NAM_BAN', 'QUAN'])['GIA_TREN_SQFT'].median().reset_index()
     fig_line = px.line(
         df_line, x='THANG_NAM_BAN', y='GIA_TREN_SQFT', color='QUAN',
         markers=True, template=theme,
-        labels={'THANG_NAM_BAN': 'Thời gian', 'GIA_TREN_SQFT': 'Đơn giá / Sqft (USD)', 'QUAN': 'Quận'}
+        labels={'THANG_NAM_BAN': 'Thời gian', 'GIA_TREN_SQFT': 'Đơn giá trên mỗi Sqft USD', 'QUAN': 'Quận'}
     )
     fig_line.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=380)
     st.plotly_chart(fig_line, use_container_width=True)
 
 # Tab 2: Phan bo khong gian va vi tri
 with tab2:
-    st.markdown("<div class='insight-card'><b>Phân tích không gian:</b> Khảo sát phân bố mật độ và tương quan vị trí địa lý giữa 5 quận lớn New York (Manhattan, Brooklyn, Queens, Bronx, Staten Island).</div>", unsafe_allow_html=True)
+    st.markdown("<div class='insight-card'><b>Phân tích không gian địa lý:</b> Khảo sát phân bố mật độ và tương quan vị trí giữa năm quận lớn New York bao gồm Manhattan, Brooklyn, Queens, Bronx và Staten Island.</div>", unsafe_allow_html=True)
     m_col1, m_col2 = st.columns([6, 4])
     
     with m_col1:
-        st.markdown("#### 4. Bản Đồ Địa Lý Tương Tác (Scatter Map): Phân Bố Vị Trí Giao Dịch")
+        st.markdown("#### 4. Bản Đồ Địa Lý Tương Tác: Phân Bố Không Gian Giao Dịch")
         df_map = safe_sample(df_loc, n=2000)
         if hasattr(px, "scatter_map"):
             fig_map = px.scatter_map(
@@ -268,24 +269,24 @@ with tab2:
         st.plotly_chart(fig_map, use_container_width=True)
         
     with m_col2:
-        st.markdown("#### 5. Biểu đồ Mật Độ Nhiệt 2 Chiều (Density Heatmap): Tuổi Thọ Nhà vs Đơn Giá")
+        st.markdown("#### 5. Biểu đồ Mật Độ Nhiệt Hai Chiều: Tuổi Thọ Công Trình Và Đơn Giá")
         p95_sqft_cut = df_loc['GIA_TREN_SQFT'].quantile(0.95)
         df_heat = df_loc[(df_loc['GIA_TREN_SQFT'] <= p95_sqft_cut) & (df_loc['TUOI_THO_NHA'] <= 140)]
         fig_density = px.density_heatmap(
             df_heat, x='TUOI_THO_NHA', y='GIA_TREN_SQFT',
             nbinsx=25, nbinsy=25, color_continuous_scale='Viridis', template=theme,
-            labels={'TUOI_THO_NHA': 'Tuổi thọ công trình (Năm)', 'GIA_TREN_SQFT': 'Đơn giá / Sqft (USD)'}
+            labels={'TUOI_THO_NHA': 'Tuổi thọ công trình tính theo năm', 'GIA_TREN_SQFT': 'Đơn giá trên mỗi Sqft USD'}
         )
         fig_density.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=500)
         st.plotly_chart(fig_density, use_container_width=True)
 
-# Tab 3: Cau truc do thi va drill-down
+# Tab 3: Cau truc do thi va phan cap
 with tab3:
-    st.markdown("<div class='insight-card'><b>Phân tích phân cấp:</b> Tính năng Drill-Down cho phép người dùng click trực tiếp vào từng ô trên Treemap để đào sâu từ toàn thành phố xuống từng Quận và từng Khu phố trực thuộc.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='insight-card'><b>Phân tích cấu trúc phân cấp:</b> Cơ chế trực quan phân tầng cho phép tương tác trực tiếp trên biểu đồ để khảo sát cấu trúc dòng tiền từ cấp toàn thành phố xuống từng quận và từng khu phố trực thuộc.</div>", unsafe_allow_html=True)
     t_col1, t_col2 = st.columns([6, 4])
     
     with t_col1:
-        st.markdown("#### 6. Biểu đồ Treemap: Cấu Trúc Đô Thị & Drill-Down Phân Cấp")
+        st.markdown("#### 6. Biểu đồ Treemap: Cấu Trúc Đô Thị Và Phân Cấp Dòng Tiền")
         fig_tree = px.treemap(
             df_loc, path=[px.Constant("Toàn TP New York"), 'QUAN', 'KHU_PHO'],
             values='GIA_BAN', color='GIA_BAN', color_continuous_scale='Blues',
@@ -295,12 +296,12 @@ with tab3:
         st.plotly_chart(fig_tree, use_container_width=True)
         
     with t_col2:
-        st.markdown("#### 7. Biểu đồ Cột Ngang (Horizontal Bar): Top 10 Khu Phố Đắt Đỏ Nhất")
+        st.markdown("#### 7. Biểu đồ Cột Ngang: Top 10 Khu Phố Có Mức Giá Trung Vị Cao Nhất")
         top_khu = df_loc.groupby('KHU_PHO')['GIA_BAN'].median().reset_index().sort_values('GIA_BAN', ascending=False).head(10)
         fig_bar_h = px.bar(
             top_khu, x='GIA_BAN', y='KHU_PHO', orientation='h',
             color='GIA_BAN', color_continuous_scale='Reds', template=theme,
-            labels={'GIA_BAN': 'Giá bán trung vị (USD)', 'KHU_PHO': 'Khu phố'}
+            labels={'GIA_BAN': 'Giá bán trung vị USD', 'KHU_PHO': 'Khu phố'}
         )
         fig_bar_h.update_layout(
             yaxis={'categoryorder': 'total ascending'},
@@ -309,8 +310,8 @@ with tab3:
         st.plotly_chart(fig_bar_h, use_container_width=True)
 
     st.markdown("---")
-    st.markdown("### Khảo Sát Chi Tiết Từng Quận (Drill-Down Inspector)")
-    chon_quan_dd = st.selectbox("Chọn quận để phân tích chuyên sâu cấp Khu Phố:", options=ds_quan_all)
+    st.markdown("### Khảo Sát Chi Tiết Cấp Khu Phố Theo Quận")
+    chon_quan_dd = st.selectbox("Chọn quận hành chính để phân tích chuyên sâu cấp khu phố:", options=ds_quan_all)
     df_quan_selected = df_loc[df_loc['QUAN'] == chon_quan_dd]
     
     if len(df_quan_selected) > 0:
@@ -319,67 +320,67 @@ with tab3:
             top_kp_quan = df_quan_selected.groupby('KHU_PHO')['GIA_BAN'].median().reset_index().sort_values('GIA_BAN', ascending=False).head(8)
             fig_dd_bar = px.bar(
                 top_kp_quan, x='KHU_PHO', y='GIA_BAN', text_auto='.2s',
-                title=f"Top Khu Phố Thuộc Quận {chon_quan_dd}",
+                title=f"Khu Phố Tiêu Biểu Thuộc Quận {chon_quan_dd}",
                 color='GIA_BAN', color_continuous_scale='Teal', template=theme
             )
             fig_dd_bar.update_layout(xaxis_tickangle=-30, height=340)
             st.plotly_chart(fig_dd_bar, use_container_width=True)
             
         with dd2:
-            st.markdown(f"**Thông tin tổng hợp quận {chon_quan_dd}:**")
-            st.write(f"- Tổng số giao dịch ghi nhận: **{len(df_quan_selected):,}** căn")
-            st.write(f"- Mức giá cao nhất: **${df_quan_selected['GIA_BAN'].max():,.0f}**")
-            st.write(f"- Mức giá trung vị: **${df_quan_selected['GIA_BAN'].median():,.0f}**")
-            st.write(f"- Đơn giá trung vị / sqft: **${df_quan_selected['GIA_TREN_SQFT'].median():,.0f} / sqft**")
+            st.markdown(f"**Chỉ số thống kê quận {chon_quan_dd}:**")
+            st.write(f"- Tổng số giao dịch ghi nhận: **{len(df_quan_selected):,}** giao dịch")
+            st.write(f"- Mức giá cao nhất: **${df_quan_selected['GIA_BAN'].max():,.0f} USD**")
+            st.write(f"- Mức giá trung vị: **${df_quan_selected['GIA_BAN'].median():,.0f} USD**")
+            st.write(f"- Đơn giá trung vị trên mỗi sqft: **${df_quan_selected['GIA_TREN_SQFT'].median():,.0f} USD**")
             mode_kp = df_quan_selected['KHU_PHO'].mode()
             if len(mode_kp) > 0:
-                st.write(f"- Khu phố có nhiều giao dịch nhất: **{mode_kp.values[0]}**")
+                st.write(f"- Khu phố có mật độ giao dịch cao nhất: **{mode_kp.values[0]}**")
 
-# Tab 4: Dac diem cong trinh va quy mo
+# Tab 4: Dac tinh cong trinh va quy mo
 with tab4:
-    st.markdown("<div class='insight-card'><b>Phân tích đặc điểm:</b> Khảo sát phân tán thống kê giá bán, khoảng tứ phân vị (IQR), các giá trị dị biệt (outliers) và nhóm quy mô diện tích công trình.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='insight-card'><b>Phân tích đặc tính kỹ thuật công trình:</b> Khảo sát phân bố thống kê giá bán, khoảng tứ phân vị, các trường hợp dị biệt và tương quan giữa diện tích sàn với giá trị tài sản.</div>", unsafe_allow_html=True)
     p_col1, p_col2 = st.columns(2)
     
     with p_col1:
-        st.markdown("#### 8. Biểu đồ Cột Đứng: Mức Giá Bán Trung Vị Theo Nhóm Diện Tích")
+        st.markdown("#### 8. Biểu đồ Cột Đứng: Mức Giá Bán Trung Vị Theo Phân Khúc Diện Tích")
         bins = [0, 1000, 2000, 3000, 5000, np.inf]
-        labels = ['Nhỏ (<1000)', 'Vừa (1000-2000)', 'Lớn (2000-3000)', 'Rất Lớn (3000-5000)', 'Biệt Thự/Tòa Nhà (>5000)']
+        labels = ['Dưới 1000 sqft', 'Từ 1000 đến 2000 sqft', 'Từ 2000 đến 3000 sqft', 'Từ 3000 đến 5000 sqft', 'Trên 5000 sqft']
         df_loc_copy = df_loc.copy()
         df_loc_copy['NHOM_DIEN_TICH'] = pd.cut(df_loc_copy['DIEN_TICH_SU_DUNG'], bins=bins, labels=labels)
         df_bin = df_loc_copy.groupby('NHOM_DIEN_TICH', observed=False)['GIA_BAN'].median().reset_index()
         fig_bar_v = px.bar(
             df_bin, x='NHOM_DIEN_TICH', y='GIA_BAN', text_auto='.2s',
             color='NHOM_DIEN_TICH', color_discrete_sequence=px.colors.sequential.Teal,
-            template=theme, labels={'NHOM_DIEN_TICH': 'Nhóm Diện Tích (Sqft)', 'GIA_BAN': 'Giá Trung Vị (USD)'}
+            template=theme, labels={'NHOM_DIEN_TICH': 'Phân khúc diện tích', 'GIA_BAN': 'Giá trung vị USD'}
         )
         fig_bar_v.update_layout(showlegend=False, margin=dict(l=20, r=20, t=20, b=20), height=400)
         st.plotly_chart(fig_bar_v, use_container_width=True)
         
     with p_col2:
-        st.markdown("#### 9. Biểu đồ Hộp (Box Plot): Phân Phối Giá Bán Theo Từng Quận")
+        st.markdown("#### 9. Biểu đồ Hộp: Phân Phối Giá Bán Theo Từng Quận")
         df_box_sample = safe_sample(df_loc, n=3000)
         fig_box = px.box(
             df_box_sample, x='QUAN', y='LOG_GIA_BAN', color='QUAN',
             template=theme, points="outliers",
-            labels={'QUAN': 'Quận', 'LOG_GIA_BAN': 'Log Giá Bán (USD)'}
+            labels={'QUAN': 'Quận hành chính', 'LOG_GIA_BAN': 'Logarit tự nhiên của giá bán'}
         )
         fig_box.update_layout(showlegend=False, margin=dict(l=20, r=20, t=20, b=20), height=400)
         st.plotly_chart(fig_box, use_container_width=True)
 
-    st.markdown("#### 10. Biểu đồ Tần Suất (Histogram): Phân Bố Đơn Giá / Sqft")
+    st.markdown("#### 10. Biểu đồ Tần Suất: Phân Bố Đơn Giá Trên Mỗi Sqft")
     p95_sqft = df_loc['GIA_TREN_SQFT'].quantile(0.95)
     df_hist_sub = df_loc[df_loc['GIA_TREN_SQFT'] <= p95_sqft]
     fig_hist = px.histogram(
         df_hist_sub, x='GIA_TREN_SQFT', nbins=50, marginal='box',
         color_discrete_sequence=['#4F46E5'], template=theme,
-        labels={'GIA_TREN_SQFT': 'Đơn giá / Sqft (USD)'}
+        labels={'GIA_TREN_SQFT': 'Đơn giá trên mỗi Sqft USD'}
     )
     fig_hist.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=380)
     st.plotly_chart(fig_hist, use_container_width=True)
 
-# Tab 5: Hoc may dinh gia bat dong san
+# Tab 5: Mo hinh hoi quy dinh gia bat dong san
 with tab5:
-    st.markdown("<div class='insight-card'><b>Mô hình học máy định giá:</b> Ứng dụng thuật toán Random Forest Regressor để định giá tài sản đa biến dựa trên đặc điểm công trình (Diện tích, Tuổi thọ), điều kiện dân cư (Thu nhập) và vị trí địa lý (Quận).</div>", unsafe_allow_html=True)
+    st.markdown("<div class='insight-card'><b>Mô hình định giá tài sản:</b> Ứng dụng phương pháp Hồi quy tuyến tính đa biến nhằm xác định giá trị kỳ vọng của bất động sản. Mô hình thiết lập hàm tương quan định lượng giữa biến phụ thuộc ln giá bán với các biến độc lập gồm diện tích sàn, tuổi thọ công trình, thu nhập trung vị và vị trí năm quận hành chính thành phố New York.</div>", unsafe_allow_html=True)
     
     rf_data = None
     ai_model = None
@@ -394,48 +395,69 @@ with tab5:
     col_left, col_right = st.columns([1.2, 1], gap="large")
     
     with col_left:
-        st.markdown("#### Mức Độ Quan Trọng Của Đặc Trưng (Feature Importances)")
-        st.write("Bảng dưới đây giải thích mức độ đóng góp của từng yếu tố vào quyết định định giá của mô hình:")
+        st.markdown("#### Bảng Hệ Số Hồi Quy Tuyến Tính Và Trọng Số Tác Động")
+        st.write("Phương trình toán học ước lượng: $\\ln(\\text{Giá}) = \\beta_0 + \\sum \\beta_i \\cdot X_i$")
         
         if ai_model is not None:
-            if hasattr(ai_model, 'feature_importances_'):
-                importances = ai_model.feature_importances_
-            else:
-                importances = np.abs(ai_model.coef_)
+            intercept_val = rf_data.get('intercept', getattr(ai_model, 'intercept_', 13.4263))
+            coefs = getattr(ai_model, 'coef_', None)
+            if coefs is None and 'coefficients' in rf_data:
+                coefs = [rf_data['coefficients'].get(f, 0.0) for f in ai_features]
+            elif coefs is None:
+                coefs = [0.0] * len(ai_features)
                 
-            df_importances = pd.DataFrame({
-                'Đặc trưng': ai_features,
-                'Mức độ đóng góp (Weight)': importances
-            }).sort_values(by='Mức độ đóng góp (Weight)', ascending=False)
+            df_coefs = pd.DataFrame({
+                'Tên biến độc lập': ai_features,
+                'Hệ số Beta': coefs
+            })
+            df_coefs['Chiều hướng tác động'] = df_coefs['Hệ số Beta'].apply(lambda x: 'Tăng giá trị tài sản' if x > 0 else 'Giảm giá trị tài sản')
+            df_coefs['Mức độ ảnh hưởng'] = np.abs(df_coefs['Hệ số Beta'])
+            df_coefs = df_coefs.sort_values(by='Mức độ ảnh hưởng', ascending=False)
             
-            df_importances['Đặc trưng'] = df_importances['Đặc trưng'].str.replace('Quan_', 'Vị trí: ')
-            st.dataframe(df_importances.style.format({'Mức độ đóng góp (Weight)': '{:.5f}'}), use_container_width=True, height=250)
+            df_coefs['Tên biến độc lập'] = df_coefs['Tên biến độc lập'].str.replace('Quan_', 'Vị trí quận ')
+            df_coefs['Tên biến độc lập'] = df_coefs['Tên biến độc lập'].replace({
+                'GROSS SQUARE FEET': 'Diện tích sàn sử dụng Sqft',
+                'DIEN_TICH_SU_DUNG': 'Diện tích sàn sử dụng Sqft',
+                'PROPERTY_AGE': 'Tuổi thọ công trình tính theo năm',
+                'TUOI_THO_NHA': 'Tuổi thọ công trình tính theo năm',
+                'MEDIAN_HOUSEHOLD_INCOME': 'Thu nhập trung vị hộ gia đình USD',
+                'THU_NHAP_TRUNG_BINH': 'Thu nhập trung vị hộ gia đình USD',
+            })
+            
+            st.dataframe(
+                df_coefs[['Tên biến độc lập', 'Hệ số Beta', 'Chiều hướng tác động']].style.format({
+                    'Hệ số Beta': '{:+.6f}'
+                }),
+                use_container_width=True,
+                height=220
+            )
+            st.info(f"**Hệ số chặn Beta 0:** `{intercept_val:.4f}`")
             
             met = rf_data.get('metrics', {}) if rf_data else {}
             if met:
                 m1, m2, m3 = st.columns(3)
-                m1.metric("R² Score (Test)", f"{met.get('R2_log', 0):.2f}")
-                m2.metric("MAE (Sai số TB)", f"${met.get('MAE_usd', 0):,.0f}")
-                m3.metric("Sai lệch trung vị", f"{met.get('MedAPE_%', 0):.1f}%")
-                st.caption(f"Mô hình lựa chọn: **{rf_data.get('model_name', 'Random Forest')}** — kiểm thử độc lập trên 20% dữ liệu Test.")
+                m1.metric("Hệ Số Xác Định R²", f"{met.get('R2_log', 0):.3f}")
+                m2.metric("Sai Số Tuyệt Đối Trung Bình MAE", f"${met.get('MAE_usd', 0):,.0f} USD")
+                m3.metric("Sai Lệch Phần Trăm Trung Vị", f"{met.get('MedAPE_%', 0):.1f}%")
+                st.caption("Kiểm định mô hình độc lập trên tập mẫu kiểm thử tỷ lệ 20%.")
         else:
-            st.warning("Đang chờ tải mô hình... Vui lòng chạy `python train_model.py` để tạo `nyc_rf_model.pkl`.")
+            st.warning("Đang kết nối tham số mô hình. Vui lòng chạy tập lệnh huấn luyện để khởi tạo dữ liệu trọng số.")
             
     with col_right:
-        st.markdown("#### Mô Phỏng Dự Báo Giá Trị Bất Động Sản")
-        st.write("Nhập các thông số đặc điểm và vị trí thực tế bên dưới để mô hình định giá:")
+        st.markdown("#### Mô Phỏng Ước Tính Giá Trị Bất Động Sản")
+        st.write("Nhập các thông số kỹ thuật và vị trí công trình để mô hình hồi quy ước lượng giá bán:")
         
-        sim_quan = st.selectbox("Chọn Vị trí Quận:", options=ds_quan_all, key="sim_quan_box")
-        sim_dt = st.number_input("Diện tích sử dụng (Sqft):", min_value=100, max_value=20000, value=1500, step=100)
-        sim_tuoi = st.number_input("Tuổi thọ công trình (Năm):", min_value=0, max_value=200, value=20, step=1)
+        sim_quan = st.selectbox("Vị trí quận hành chính:", options=ds_quan_all, key="sim_quan_box")
+        sim_dt = st.number_input("Diện tích sàn theo đơn vị Sqft:", min_value=100, max_value=20000, value=1500, step=100)
+        sim_tuoi = st.number_input("Tuổi thọ công trình theo năm:", min_value=0, max_value=200, value=20, step=1)
         
         thu_nhap_goi_y = 60000.0
         if rf_data and 'income_by_borough' in rf_data:
             thu_nhap_goi_y = float(rf_data['income_by_borough'].get(sim_quan, 60000.0))
-        sim_thu_nhap = st.number_input("Thu nhập hộ gia đình trung vị (USD/năm):", min_value=10000, max_value=250000, value=int(thu_nhap_goi_y), step=1000)
-        sim_nam_du_phong = st.slider("Số năm dự phóng tương lai:", min_value=1, max_value=50, value=20, step=1)
+        sim_thu_nhap = st.number_input("Thu nhập hộ gia đình trung vị tính theo USD mỗi năm:", min_value=10000, max_value=250000, value=int(thu_nhap_goi_y), step=1000)
+        sim_nam_du_phong = st.slider("Thời gian dự phóng dòng tiền theo năm:", min_value=1, max_value=50, value=20, step=1)
         
-        if st.button("Dự Báo Giá Trị Bất Động Sản", type="primary", use_container_width=True):
+        if st.button("Ước Tính Giá Trị Tài Sản", type="primary", use_container_width=True):
             if ai_model is not None:
                 try:
                     input_df = pd.DataFrame(0.0, index=[0], columns=ai_features)
@@ -459,20 +481,20 @@ with tab5:
                     ty_le_tang = 0.045
                     future_price = pred_price * ((1 + ty_le_tang) ** sim_nam_du_phong)
                     
-                    st.success(f"Giá trị dự báo hiện tại: **${pred_price:,.0f} USD**")
-                    st.info(f"Đơn giá dự kiến: **${pred_price/sim_dt:,.0f} / Sqft** | Mức Log Giá: **{pred_log:.2f}**")
-                    st.warning(f"Dự phóng {sim_nam_du_phong} năm sau: **${future_price:,.0f} USD** (Tăng trưởng kỳ vọng {ty_le_tang*100:.1f}%/năm)")
+                    st.success(f"Giá trị ước tính hiện hành theo mô hình hồi quy: **${pred_price:,.0f} USD**")
+                    st.info(f"Đơn giá sàn ước tính: **${pred_price/sim_dt:,.0f} USD trên mỗi Sqft** | Mức Logarit giá: **{pred_log:.2f}**")
+                    st.warning(f"Giá trị kỳ vọng sau {sim_nam_du_phong} năm: **${future_price:,.0f} USD** với tỷ lệ tăng trưởng giả định {ty_le_tang*100:.1f}% mỗi năm.")
                 except Exception as e:
-                    st.error(f"Lỗi khi dự báo: {e}")
+                    st.error(f"Phát sinh lỗi trong quá trình ước lượng: {e}")
             else:
-                st.error("Vui lòng huấn luyện mô hình bằng `python train_model.py` trước.")
+                st.error("Mô hình chưa được nạp vào bộ nhớ hệ thống.")
 
     st.markdown("---")
     
     c_bot1, c_bot2 = st.columns([1, 1], gap="medium")
     
     with c_bot1:
-        st.markdown(f"#### 11. Biểu đồ Xu Hướng Hồi Quy OLS: Diện Tích vs Giá ({sim_quan})")
+        st.markdown(f"#### 11. Biểu đồ Xu Hướng Hồi Quy OLS: Diện Tích Và Giá Bán Tại {sim_quan}")
         df_trend_sub = df_loc[df_loc['QUAN'] == sim_quan].copy()
         if len(df_trend_sub) > 0:
             df_trend_clean = df_trend_sub[df_trend_sub['GIA_BAN'] < df_trend_sub['GIA_BAN'].quantile(0.95)]
@@ -485,16 +507,16 @@ with tab5:
                 df_plot_trend, x='DIEN_TICH_SU_DUNG', y='GIA_BAN',
                 trendline="ols", opacity=0.6, template=theme,
                 color_discrete_sequence=['#2E86AB'],
-                labels={'DIEN_TICH_SU_DUNG': 'Diện tích (Sqft)', 'GIA_BAN': 'Giá thực tế (USD)'}
+                labels={'DIEN_TICH_SU_DUNG': 'Diện tích sàn Sqft', 'GIA_BAN': 'Giá bán thực tế USD'}
             )
             fig_reg.update_traces(line=dict(color="#D1495B", width=3.5), selector=dict(mode="lines"))
             fig_reg.update_layout(height=380, margin=dict(l=20, r=20, t=20, b=20))
             st.plotly_chart(fig_reg, use_container_width=True)
         else:
-            st.warning(f"Không đủ dữ liệu để vẽ xu hướng cho {sim_quan}.")
+            st.warning(f"Dữ liệu chưa đủ mật độ để ước lượng hồi quy cho khu vực {sim_quan}.")
 
     with c_bot2:
-        st.markdown("#### 12. Đối Chiếu: Giá Thực Tế vs AI Dự Báo (Đường Lý Tưởng y=x)")
+        st.markdown("#### 12. Đối Chiếu Thực Tế Và Dự Báo: Đánh Giá Độ Khớp Tuyến Tính")
         try:
             df_eval_sample = safe_sample(df_loc.dropna(subset=['GIA_BAN', 'DIEN_TICH_SU_DUNG', 'TUOI_THO_NHA']), n=800)
             if len(df_eval_sample) > 0 and ai_model is not None:
@@ -524,33 +546,33 @@ with tab5:
                 fig_eval = px.scatter(
                     df_eval_sample, x='GIA_BAN', y='GIA_DU_BAO', color='QUAN',
                     opacity=0.65, template=theme, log_x=True, log_y=True,
-                    labels={'GIA_BAN': 'Giá Thực Tế (USD)', 'GIA_DU_BAO': 'Giá AI Dự Báo (USD)'}
+                    labels={'GIA_BAN': 'Giá bán thực tế USD', 'GIA_DU_BAO': 'Giá dự báo từ mô hình hồi quy USD'}
                 )
                 min_v = min(df_eval_sample['GIA_BAN'].min(), df_eval_sample['GIA_DU_BAO'].min(), 10000)
                 max_v = max(df_eval_sample['GIA_BAN'].max(), df_eval_sample['GIA_DU_BAO'].max(), 50000000)
                 fig_eval.add_trace(go.Scatter(
                     x=[min_v, max_v], y=[min_v, max_v], mode='lines',
-                    line=dict(color='black', dash='dash', width=2), name='Đường lý tưởng (y=x)'
+                    line=dict(color='black', dash='dash', width=2), name='Đường chuẩn lý tưởng y = x'
                 ))
                 fig_eval.update_layout(height=380, margin=dict(l=20, r=20, t=20, b=20))
                 st.plotly_chart(fig_eval, use_container_width=True)
             else:
-                st.warning("Đang tải dữ liệu kiểm định mô hình...")
+                st.warning("Đang chuẩn bị mẫu dữ liệu kiểm định.")
         except Exception as e:
-            st.warning("Vui lòng đảm bảo mô hình đã được huấn luyện đầy đủ.")
+            st.warning("Vui lòng đảm bảo các tham số mô hình đã được tải đầy đủ.")
 
-# Tab 6: Du bao xu huong thi truong
+# Tab 6: Du bao xu huong thi truong chuoi thoi gian
 with tab6:
-    st.markdown("<div class='insight-card'><b>Hồi quy xu hướng chuỗi thời gian:</b> Mô hình học xu hướng theo tháng từ dữ liệu lịch sử, mở rộng dự phóng ra tương lai kèm <b>khoảng tin cậy 95%</b> và đo kiểm ý nghĩa thống kê (p-value, R²).</div>", unsafe_allow_html=True)
+    st.markdown("<div class='insight-card'><b>Phân tích chuỗi thời gian:</b> Mô hình học xu hướng biến động theo tháng từ chuỗi dữ liệu lịch sử, dự phóng giá trị kỳ vọng trong tương lai kèm khoảng tin cậy 95% và kiểm định mức ý nghĩa thống kê qua p-value và hệ số xác định R².</div>", unsafe_allow_html=True)
 
     f1, f2, f3 = st.columns(3)
-    chi_so = f1.selectbox("Chỉ số dự báo:", ["Giá trung vị (USD)", "Đơn giá trung vị / Sqft (USD)", "Số lượng giao dịch"])
-    pham_vi = f2.selectbox("Khu vực thị trường:", ["Toàn New York"] + ds_quan_all)
-    so_thang = f3.slider("Số tháng dự báo tương lai:", min_value=1, max_value=12, value=6)
+    chi_so = f1.selectbox("Chỉ số kinh tế cần dự báo:", ["Giá bán trung vị tính theo USD", "Đơn giá trung vị trên mỗi Sqft tính theo USD", "Số lượng giao dịch phát sinh"])
+    pham_vi = f2.selectbox("Phạm vi phân tích thị trường:", ["Toàn Thành Phố New York"] + ds_quan_all)
+    so_thang = f3.slider("Số tháng dự phóng tương lai:", min_value=1, max_value=12, value=6)
 
-    df_fc = df_loc if pham_vi == "Toàn New York" else df_loc[df_loc['QUAN'] == pham_vi]
+    df_fc = df_loc if pham_vi == "Toàn Thành Phố New York" else df_loc[df_loc['QUAN'] == pham_vi]
 
-    if chi_so.startswith("Giá trung vị"):
+    if chi_so.startswith("Giá bán"):
         chuoi = df_fc.groupby('THANG_NAM_BAN')['GIA_BAN'].median()
     elif chi_so.startswith("Đơn giá"):
         chuoi = df_fc.groupby('THANG_NAM_BAN')['GIA_TREN_SQFT'].median()
@@ -559,9 +581,9 @@ with tab6:
     chuoi = chuoi.dropna().sort_index()
 
     if len(chuoi) < 4:
-        st.warning("Cần tối thiểu 4 tháng dữ liệu để chạy mô hình hồi quy. Vui lòng mở rộng bộ lọc ở thanh bên.")
+        st.warning("Cần tối thiểu 4 mốc thời gian để thực thi hồi quy chuỗi thời gian. Vui lòng mở rộng điều kiện lọc.")
     else:
-        st.markdown(f"#### 13. Biểu đồ Dự Báo Xu Hướng: {chi_so} ({pham_vi}) Kèm Khoảng Tin Cậy 95%")
+        st.markdown(f"#### 13. Biểu đồ Dự Báo Xu Hướng: {chi_so} Tại {pham_vi} Kèm Khoảng Tin Cậy 95%")
         
         # Tinh toan hoi quy tuyen tinh va khoang tin cay 95%
         t = np.arange(len(chuoi))
@@ -593,12 +615,12 @@ with tab6:
         fig_fc.add_trace(go.Scatter(x=nhan_tuong_lai + nhan_tuong_lai[::-1], y=list(high) + list(low[::-1]),
                                     mode="lines", fill="toself", fillcolor="rgba(245,158,11,0.22)", line=dict(width=0),
                                     name="Khoảng tin cậy 95%", hoverinfo="skip"))
-        fig_fc.add_trace(go.Scatter(x=list(chuoi.index), y=y_fit, mode="lines", name="Đường xu hướng (Fitted OLS)",
+        fig_fc.add_trace(go.Scatter(x=list(chuoi.index), y=y_fit, mode="lines", name="Đường xu hướng OLS",
                                     line=dict(color="#9CA3AF", width=2, dash="dot"), hoverinfo="skip"))
-        fig_fc.add_trace(go.Scatter(x=list(chuoi.index), y=y, mode="lines+markers", name="Thực tế",
+        fig_fc.add_trace(go.Scatter(x=list(chuoi.index), y=y, mode="lines+markers", name="Chuỗi số liệu thực tế",
                                     line=dict(color="#2563EB", width=3), marker=dict(size=7)))
         fig_fc.add_trace(go.Scatter(x=[chuoi.index[-1]] + nhan_tuong_lai, y=[y_fit[-1]] + list(y_f),
-                                    mode="lines+markers", name="Dự báo xu hướng",
+                                    mode="lines+markers", name="Đường dự báo xu hướng",
                                     line=dict(color="#F59E0B", width=3, dash="dash"), marker=dict(size=7)))
                                     
         fig_fc.add_annotation(x=chuoi.index[-1], y=y[-1], text=f"Thực tế {chuoi.index[-1]}<br><b>{fm(y[-1])}</b>",
@@ -614,36 +636,36 @@ with tab6:
         doi_phan_tram = (res.slope / y.mean() * 100) if y.mean() != 0 else 0
         lech_xu_huong = ((y[-1] / y_fit[-1] - 1) * 100) if y_fit[-1] != 0 else 0
         k1, k2, k3, k4 = st.columns(4)
-        k1.metric("Mức biến động mỗi tháng", f"{tien_to}{res.slope:+,.0f}", f"{doi_phan_tram:+.2f}% / tháng")
-        k2.metric("R² (Độ phù hợp xu hướng)", f"{res.rvalue ** 2:.2f}", help="Hệ số xác định tương quan tuyến tính")
-        k3.metric("p-value", f"{res.pvalue:.3f}", help="p < 0.05 thể hiện xu hướng có ý nghĩa thống kê tin cậy")
-        k4.metric(f"Dự báo {nhan_tuong_lai[-1]}", fm(y_f[-1]), f"{(y_f[-1] / y.mean() - 1) * 100:+.1f}% so với TB")
+        k1.metric("Mức biến động bình quân tháng", f"{tien_to}{res.slope:+,.0f}", f"{doi_phan_tram:+.2f}% mỗi tháng")
+        k2.metric("Hệ số R² xác định xu hướng", f"{res.rvalue ** 2:.3f}", help="Hệ số xác định tương quan tuyến tính chuỗi thời gian")
+        k3.metric("Mức ý nghĩa thống kê p-value", f"{res.pvalue:.4f}", help="Giá trị p nhỏ hơn 0.05 thể hiện xu hướng có độ tin cậy thống kê cao")
+        k4.metric(f"Kỳ vọng tháng {nhan_tuong_lai[-1]}", fm(y_f[-1]), f"{(y_f[-1] / y.mean() - 1) * 100:+.1f}% so với trung bình")
 
         huong = "tăng" if res.slope > 0 else "giảm"
         co_y_nghia = res.pvalue < 0.05
         dong_lech = ""
         if abs(lech_xu_huong) >= 5:
-            dong_lech = (f"\n- **Lưu ý tháng cuối:** Tháng {chuoi.index[-1]} thực tế ({fm(y[-1])}) "
-                         f"{'cao hơn' if lech_xu_huong > 0 else 'thấp hơn'} đường xu hướng {abs(lech_xu_huong):.0f}% "
-                         f"(biến động ngắn hạn).")
+            dong_lech = (f"\n- Lưu ý điểm đo cuối kỳ: Giá trị tháng {chuoi.index[-1]} thực tế đạt {fm(y[-1])}, "
+                         f"{'cao hơn' if lech_xu_huong > 0 else 'thấp hơn'} đường xu hướng lý thuyết {abs(lech_xu_huong):.0f}% "
+                         f"do dao động ngắn hạn.")
         st.info(
-            f"**Kết luận Insight:** {chi_so} tại **{pham_vi}** đang có xu hướng **{huong} {abs(doi_phan_tram):.2f}%/tháng** "
-            f"({tien_to}{res.slope:+,.0f}/tháng).\n"
-            f"- **Độ tin cậy thống kê:** " + ("Xu hướng **có ý nghĩa thống kê** (p < 0.05)." if co_y_nghia else
-                                    "Xu hướng **chưa đủ ý nghĩa thống kê** (p ≥ 0.05), chỉ nên xem là tham khảo.") + "\n"
-            f"- **Kỳ vọng {nhan_tuong_lai[-1]}:** {fm(y_f[-1])} (biên độ dao động 95%: {fm(low[-1])} – {fm(high[-1])})."
+            f"**Kết luận kinh tế:** Chỉ số {chi_so.lower()} tại khu vực **{pham_vi}** ghi nhận xu hướng **{huong} {abs(doi_phan_tram):.2f}% mỗi tháng**, "
+            f"tương đương mức biến động {tien_to}{res.slope:+,.0f} mỗi tháng.\n"
+            f"- Đánh giá thống kê: " + ("Xu hướng có độ tin cậy cao với p-value nhỏ hơn 0.05." if co_y_nghia else
+                                    "Xu hướng chưa đạt ngưỡng ý nghĩa thống kê tiêu chuẩn với p-value lớn hơn hoặc bằng 0.05.") + "\n"
+            f"- Mức kỳ vọng tháng {nhan_tuong_lai[-1]}: {fm(y_f[-1])} trong khoảng dao động tin cậy từ {fm(low[-1])} đến {fm(high[-1])}."
             + dong_lech
         )
 
-        with st.expander("Xem chi tiết bảng số liệu dự báo theo tháng"):
+        with st.expander("Xem bảng số liệu dự báo chi tiết theo từng tháng"):
             bang = pd.DataFrame({
-                "Tháng tương lai": nhan_tuong_lai,
-                "Giá trị dự báo": y_f.round(0),
-                "Cận dưới (95% CI)": low.round(0),
-                "Cận trên (95% CI)": high.round(0)
+                "Tháng dự phóng": nhan_tuong_lai,
+                "Giá trị ước lượng": y_f.round(0),
+                "Cận dưới khoảng tin cậy 95%": low.round(0),
+                "Cận trên khoảng tin cậy 95%": high.round(0)
             })
             st.dataframe(bang.style.format({
-                "Giá trị dự báo": "{:,.0f}",
-                "Cận dưới (95% CI)": "{:,.0f}",
-                "Cận trên (95% CI)": "{:,.0f}"
+                "Giá trị ước lượng": "{:,.0f}",
+                "Cận dưới khoảng tin cậy 95%": "{:,.0f}",
+                "Cận trên khoảng tin cậy 95%": "{:,.0f}"
             }), use_container_width=True, hide_index=True)
